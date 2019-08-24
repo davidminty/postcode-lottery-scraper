@@ -7,45 +7,53 @@ import time
 
 ## GLOBALS
 
-def findPostcode():
-    postcode = browser.find_element_by_class_name('result--postcode')
-    print(postcode.text)
-    
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
 browser = webdriver.Chrome(options=chrome_options)
+
+
+## FUNCTIONS
+
+def findPostcodes():
+    postcodes = browser.find_elements_by_class_name('result--postcode')
+    for postcode in postcodes:
+        p = postcode.text.split("\n")
+        winners.append(" : ".join(p))
+    return winners
+
+def nextPage():
+    nextbtn = browser.find_element_by_class_name('result--button')
+    nextbtn.click()
+
+## Create list for winning postcodes
+winners = []
+
+## Open up PickMyPostcode
 browser.get('https://pickmypostcode.com/')
 
-print("Logging in")
-#time.sleep(30)
+## Main Daily Postcode
+findPostcodes()
+nextPage()
 
-print("Looking for first postcode")
-findPostcode()
+## Video Page
+time.sleep(5)
+browser.find_element_by_xpath("//div[@class='brid-overlay-play-button brid-button ']").click()
+time.sleep(60)
+findPostcodes()
+nextPage()
 
-print("Moving to next page")
-next = browser.find_element_by_class_name('result--button')
-next.click()
+## Survey Page
+skip = browser.find_element_by_xpath("//button[@class='btn btn-secondary btn__xs']")
+skip.click()
+findPostcodes()
+nextPage()
 
-print("Waiting for page to load")
-time.sleep(30)
+## Stackpot Page
+findPostcodes()
 
-#print("Playing video")
-#play = browser.find_element_by_class_name('brid-touch-overlay')
-#play.click()
+for w in winners:
+    print(w)
 
-#print("Waiting for video to play")
-#time.sleep(60)
-
-print("Finding postcode")
-findPostcode()
-'''
-signin = browser.find_element_by_class_name('btn-secondary')
-signin.click()
-
-postcodeInput = browser.find_element_by_id('confirm-ticket')
-postcodeInput.send_keys('NG24 4AD')
-
-emailInput = browser.find_element_by_id('confirm-email')
-emailInput.send_keys('mintyxiv@gmail.com')
-emailInput.submit()
-'''
+## Close Down Browser & chromedriver
+browser.close()
+browser.quit()
