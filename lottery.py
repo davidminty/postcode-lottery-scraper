@@ -25,6 +25,9 @@ def nextPage():
     nextbtn = browser.find_element_by_class_name('result--button')
     nextbtn.click()
 
+
+
+
 ## Create list for winning postcodes
 winners = []
 
@@ -43,8 +46,7 @@ findPostcodes()
 nextPage()
 
 ## Survey Page
-skip = browser.find_element_by_xpath("//button[@class='btn btn-secondary btn__xs']")
-skip.click()
+browser.find_element_by_xpath("//button[@class='btn btn-secondary btn__xs']").click()
 findPostcodes()
 nextPage()
 
