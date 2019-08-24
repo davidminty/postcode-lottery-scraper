@@ -4,13 +4,16 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
+import datetime
+import os
 
 ## GLOBALS
 
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
 browser = webdriver.Chrome(options=chrome_options)
-
+wfile_name = "winners ({}).txt".format(datetime.date.today())
+wfile = open(wfile_name, 'w')
 
 ## FUNCTIONS
 
@@ -26,36 +29,36 @@ def nextPage():
     nextbtn.click()
 
 
-
-
-## Create list for winning postcodes
+# Create list for winning postcodes
 winners = []
 
-## Open up PickMyPostcode
+# Open up PickMyPostcode
 browser.get('https://pickmypostcode.com/')
 
-## Main Daily Postcode
+# Main Daily Postcode
 findPostcodes()
 nextPage()
 
-## Video Page
+# Video Page
 time.sleep(5)
 browser.find_element_by_xpath("//div[@class='brid-overlay-play-button brid-button ']").click()
 time.sleep(60)
 findPostcodes()
 nextPage()
 
-## Survey Page
+# Survey Page
 browser.find_element_by_xpath("//button[@class='btn btn-secondary btn__xs']").click()
 findPostcodes()
 nextPage()
 
-## Stackpot Page
+# Stackpot Page
 findPostcodes()
-
-for w in winners:
-    print(w)
 
 ## Close Down Browser & chromedriver
 browser.close()
 browser.quit()
+
+
+# Final list
+for w in winners:
+    wfile.write(w + '\n')
