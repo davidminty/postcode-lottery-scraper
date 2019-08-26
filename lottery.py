@@ -6,13 +6,16 @@ from selenium.webdriver.chrome.options import Options
 import time
 import datetime
 import os
+import smtplib
+from email.message import EmailMessage
+from keys import keys
 
 ## GLOBALS
 
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
 browser = webdriver.Chrome(options=chrome_options)
-wfile_name = "winners ({}).txt".format(datetime.date.today())
+wfile_name = "winners {}.txt".format(datetime.date.today())
 wfile = open(wfile_name, 'w')
 
 ## FUNCTIONS
@@ -58,7 +61,24 @@ findPostcodes()
 browser.close()
 browser.quit()
 
-
 # Final list
 for w in winners:
     wfile.write(w + '\n')
+
+wfile = open(wfile_name, 'r')
+
+## Emailer
+emailBody = EmailMessage()
+emailBody.set_content(wfile.read())
+emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
+
+smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
+smtpObj.ehlo()
+smtpObj.starttls()
+smtpObj.login(keys["login"], keys["password"])
+
+smtpObj.sendmail(
+    keys["fromaddr"],keys["toaddr"], emailBody.as_string()
+)
+
+smtpObj.quit()
