@@ -31,7 +31,7 @@ def findPostcodes(title = "Pick My Postcode"):
     for postcode in postcodes:
         p = postcode.text.split("\n")
         winners.append(" : ".join(p))
-    return winners
+    return winners, 
 
 def nextPage():
     nextbtn = driver.find_element_by_class_name('result--button')
@@ -40,6 +40,22 @@ def nextPage():
 def pageInteraction(element):
     page_element = wait.until(EC.presence_of_element_located((By.XPATH, element)))
     page_element.click()
+
+def emailer(wfile, keys):
+    emailBody = EmailMessage()
+    emailBody.set_content(wfile.read())
+    emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
+
+    smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
+    smtpObj.ehlo()
+    smtpObj.starttls()
+    smtpObj.login(keys["login"], keys["password"])
+
+    smtpObj.sendmail(
+        keys["fromaddr"],keys["toaddr"], emailBody.as_string()
+    )
+
+    smtpObj.quit()
 
 
 # Create list for winning postcodes
@@ -60,6 +76,7 @@ nextPage()
 # Survey Page
 pageInteraction("//button[@class='btn btn-secondary btn__xs']")
 findPostcodes("Survey")
+time.sleep(10)
 nextPage()
 
 # Stackpot Page
@@ -76,31 +93,4 @@ for w in winners:
 wfile = open(wfile_name, 'r')
 
 ## Emailer
-emailBody = EmailMessage()
-emailBody.set_content(wfile.read())
-emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
-
-smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
-smtpObj.ehlo()
-smtpObj.starttls()
-smtpObj.login(keys["login"], keys["password"])
-
-smtpObj.sendmail(
-    keys["fromaddr"],keys["toaddr"], emailBody.as_string()
-)
-
-smtpObj.quit()
-
-
-
-# Pushover Notification
-'''
-conn = http.client.HTTPSConnection("api.pushover.net:443")
-conn.request("POST", "/1/messages.json",
-  urllib.parse.urlencode({
-    "token": "APP_TOKEN",
-    "user": "USER_KEY",
-    "message": (wfile.read()),
-  }), { "Content-type": "application/x-www-form-urlencoded" })
-conn.getresponse()
-'''
+emailer(wfile, keys)
