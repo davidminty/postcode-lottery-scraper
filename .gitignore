@@ -4,3 +4,4 @@
 selenium/*
 keys.py
 emailer.py
+__pycache__/*

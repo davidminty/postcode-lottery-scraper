@@ -3,6 +3,9 @@
 ## IMPORTS
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import datetime
 import os
@@ -14,52 +17,74 @@ from keys import keys
 
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
-browser = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Chrome(options=chrome_options)
 wfile_name = "winners {}.txt".format(datetime.date.today())
 wfile = open(wfile_name, 'w')
+wait = WebDriverWait(driver, 180)
 
 ## FUNCTIONS
 
-def findPostcodes():
-    postcodes = browser.find_elements_by_class_name('result--postcode')
+def findPostcodes(title = "Pick My Postcode"):
+    wait.until(EC.title_contains(title))
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
+    postcodes = driver.find_elements_by_class_name('result--postcode')
     for postcode in postcodes:
         p = postcode.text.split("\n")
         winners.append(" : ".join(p))
-    return winners
+    return winners, 
 
 def nextPage():
-    nextbtn = browser.find_element_by_class_name('result--button')
+    nextbtn = driver.find_element_by_class_name('result--button')
     nextbtn.click()
+
+def pageInteraction(element):
+    page_element = wait.until(EC.presence_of_element_located((By.XPATH, element)))
+    page_element.click()
+
+def emailer(wfile, keys):
+    emailBody = EmailMessage()
+    emailBody.set_content(wfile.read())
+    emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
+
+    smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
+    smtpObj.ehlo()
+    smtpObj.starttls()
+    smtpObj.login(keys["login"], keys["password"])
+
+    smtpObj.sendmail(
+        keys["fromaddr"],keys["toaddr"], emailBody.as_string()
+    )
+
+    smtpObj.quit()
 
 
 # Create list for winning postcodes
 winners = []
 
 # Open up PickMyPostcode
-browser.get('https://pickmypostcode.com/')
+driver.get('https://pickmypostcode.com/')
 
 # Main Daily Postcode
 findPostcodes()
 nextPage()
 
 # Video Page
-time.sleep(5)
-browser.find_element_by_xpath("//div[@class='brid-overlay-play-button brid-button ']").click()
-time.sleep(60)
-findPostcodes()
+pageInteraction("//div[@class='brid-overlay-play-button brid-button ']")
+findPostcodes("Video")
 nextPage()
 
 # Survey Page
-browser.find_element_by_xpath("//button[@class='btn btn-secondary btn__xs']").click()
-findPostcodes()
+pageInteraction("//button[@class='btn btn-secondary btn__xs']")
+findPostcodes("Survey")
+time.sleep(10)
 nextPage()
 
 # Stackpot Page
-findPostcodes()
+findPostcodes("Stackpot")
 
 ## Close Down Browser & chromedriver
-browser.close()
-browser.quit()
+driver.close()
+driver.quit()
 
 # Final list
 for w in winners:
@@ -68,17 +93,4 @@ for w in winners:
 wfile = open(wfile_name, 'r')
 
 ## Emailer
-emailBody = EmailMessage()
-emailBody.set_content(wfile.read())
-emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
-
-smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
-smtpObj.ehlo()
-smtpObj.starttls()
-smtpObj.login(keys["login"], keys["password"])
-
-smtpObj.sendmail(
-    keys["fromaddr"],keys["toaddr"], emailBody.as_string()
-)
-
-smtpObj.quit()
+emailer(wfile, keys)
