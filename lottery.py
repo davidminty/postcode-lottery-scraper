@@ -31,7 +31,7 @@ def findPostcodes(title = "Pick My Postcode"):
     for postcode in postcodes:
         p = postcode.text.split("\n")
         winners.append(" : ".join(p))
-    return winners, 
+    return winners
 
 def nextPage():
     nextbtn = driver.find_element_by_class_name('result--button')
