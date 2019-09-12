@@ -1,0 +1,6 @@
+.vscode/settings.json
+*.log
+*.txt
+selenium/*
+keys.py
+__pycache__/*

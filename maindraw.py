@@ -2,9 +2,10 @@
 
 from lottery import *
 
-
+## Globals
 wfile_name = "main winners - {}.txt".format(datetime.date.today())
 wfile = open(wfile_name, 'w')
+winners = []
 
 # Open up PickMyPostcode
 driver.get('https://pickmypostcode.com/')

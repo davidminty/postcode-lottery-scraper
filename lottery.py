@@ -11,15 +11,13 @@ import datetime
 import os
 import smtplib
 from email.message import EmailMessage
-from keys import keys
+from keys import emailkeys
 
 ## GLOBALS
 
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
 driver = webdriver.Chrome(options=chrome_options)
-wfile_name = "winners {}.txt".format(datetime.date.today())
-wfile = open(wfile_name, 'w')
 wait = WebDriverWait(driver, 180)
 
 ## FUNCTIONS
@@ -46,19 +44,20 @@ def emailer(wfile, keys):
     emailBody.set_content(wfile.read())
     emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
 
-    smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
+    smtpObj = smtplib.SMTP(emailkeys["srv"], emailkeys["port"])
     smtpObj.ehlo()
     smtpObj.starttls()
-    smtpObj.login(keys["login"], keys["password"])
+    smtpObj.login(emailkeys["login"], emailkeys["password"])
 
     smtpObj.sendmail(
-        keys["fromaddr"],keys["toaddr"], emailBody.as_string()
+        emailkeys["fromaddr"],emailkeys["toaddr"], emailBody.as_string()
     )
 
     smtpObj.quit()
 
 
 # Create list for winning postcodes
+'''
 winners = []
 
 # Open up PickMyPostcode
@@ -93,4 +92,5 @@ for w in winners:
 wfile = open(wfile_name, 'r')
 
 ## Emailer
-emailer(wfile, keys)
+emailer(wfile, emailkeys)
+'''
