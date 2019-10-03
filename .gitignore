@@ -2,5 +2,5 @@
 *.log
 *.txt
 selenium/*
-keys.py
+*keys*
 __pycache__/*
