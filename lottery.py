@@ -11,58 +11,74 @@ import datetime
 import os
 import smtplib
 from email.message import EmailMessage
-from keys import emailkeys, pushoverkeys
+from keys import *
 import http.client
 import urllib
 
-## GLOBALS
+class Scraper:
+    chrome_options = Options()
+    driver = webdriver.Chrome(options=chrome_options)
+    wait = WebDriverWait(driver, 180)
+    
+    def __init__(self):
+        self.chrome_options.add_argument("--user-data-dir=selenium")
+        self.winners = []
 
-chrome_options = Options()
-chrome_options.add_argument("--user-data-dir=selenium")
-driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 180)
-winners = []
+    def open_page(self, url):
+        self.page = url.split(".com/", -1)
+        self.driver.get(url)
+    
+    def page_interaction(self, element):
+        try:
+            page_element = self.wait.until(EC.presence_of_element_located((By.XPATH, element)))
+            page_element.click()
+        except:
+            pass
 
-## FUNCTIONS
+    def find_postcodes(self):
+        try:
+            self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
+            self.postcodes = self.driver.find_elements_by_class_name('result--postcode')
+            for self.postcode in self.postcodes:
+                p = self.postcode.text.split("\n")
+                self.winners.append(" : ".join(p))
+        except:
+            self.winners.append("Unable to find Postcodes for {} draw".format(self.page))
+        return self.winners
 
-def find_postcodes():
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
-    postcodes = driver.find_elements_by_class_name('result--postcode')
-    for postcode in postcodes:
-        p = postcode.text.split("\n")
-        winners.append(" : ".join(p))
-    return winners
+    def next_page(self):
+        nextbtn = self.driver.find_element_by_class_name('result--button')
+        nextbtn.click()
 
-def next_page():
-    nextbtn = driver.find_element_by_class_name('result--button')
-    nextbtn.click()
+    def close_driver(self):
+        self.driver.close()
+        self.driver.quit()
 
-def page_interaction(element):
-    page_element = wait.until(EC.presence_of_element_located((By.XPATH, element)))
-    page_element.click()
 
-def emailer(wfile, keys):
-    emailBody = EmailMessage()
-    emailBody.set_content(wfile.read())
-    emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
+class Notifier():
+    def __init__(self, wfile):
+        self.emailkeys = emailkeys
+        self.pushkeys = pushkeys
+        self.wfile = wfile
 
-    smtpObj = smtplib.SMTP(emailkeys["srv"], emailkeys["port"])
-    smtpObj.ehlo()
-    smtpObj.starttls()
-    smtpObj.login(emailkeys["login"], emailkeys["password"])
+    def emailer(self):
+        emailBody = EmailMessage()
+        emailBody.set_content(self.wfile.read())
+        emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
 
-    smtpObj.sendmail(
-        emailkeys["fromaddr"],emailkeys["toaddr"], emailBody.as_string()
-    )
+        smtpObj = smtplib.SMTP(self.emailkeys["srv"], self.emailkeys["port"])
+        smtpObj.ehlo()
+        smtpObj.starttls()
+        smtpObj.login(self.emailkeys["login"], self.emailkeys["password"])
+        smtpObj.sendmail(self.emailkeys["fromaddr"],self.emailkeys["toaddr"], emailBody.as_string())
+        smtpObj.quit()
 
-    smtpObj.quit()
-
-def pushover(wfile, keys):
-    conn = http.client.HTTPSConnection("api.pushover.net:443")
-    conn.request("POST", "/1/messages.json",
-        urllib.parse.urlencode({
-        "token": pushoverkeys["apptoken"],
-        "user": pushoverkeys["userkey"],
-        "message": (wfile.read())}), 
-        { "Content-type": "application/x-www-form-urlencoded" })
-    conn.getresponse()
+    def pushover(self):
+        conn = http.client.HTTPSConnection("api.pushover.net:443")
+        conn.request("POST", "/1/messages.json",
+            urllib.parse.urlencode({
+            "token": self.pushkeys["apptoken"],
+            "user": self.pushkeys["userkey"],
+            "message": (self.wfile.read())}), 
+            { "Content-type": "application/x-www-form-urlencoded" })
+        conn.getresponse()
