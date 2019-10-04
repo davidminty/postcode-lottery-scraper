@@ -1,19 +1,24 @@
 #!/usr/bin/python3
 from lottery import *
 
+# Instantiate scraper
 maindraw = Scraper()
 
+# Main Draw
 maindraw.open_page('https://pickmypostcode.com/')
 maindraw.find_postcodes()
 
+# Video Draw
 maindraw.open_page('https://pickmypostcode.com/video')
 maindraw.page_interaction("//div[@class='brid-overlay-play-button brid-button ']")
 maindraw.find_postcodes()
 
+# Survey Draw
 maindraw.open_page('https://pickmypostcode.com/survey-draw')
 maindraw.page_interaction("//button[@class='btn btn-secondary btn__xs']")
 maindraw.find_postcodes()
 
+# Bonus Draw
 maindraw.open_page("https://pickmypostcode.com/your-bonus")
 maindraw.find_postcodes()
 
