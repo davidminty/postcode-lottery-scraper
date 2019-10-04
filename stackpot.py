@@ -1,20 +1,21 @@
 #!/usr/bin/python3
+# IMPORTS
 from lottery import *
-import datetime
 
+# Instantiate the scraper
 stackpot = Scraper()
-stackpot.open_page('https://pickmypostcode.com/stackpot')
-winners = stackpot.find_postcodes()
 
+#Open the Stackpot Page
+stackpot.open_page('https://pickmypostcode.com/stackpot')
+stackpot.find_postcodes()
+
+# Build the Winning Postcode List
+winners = stackpot.winners
+
+# Close chrome and the driver
 stackpot.close_driver()
 
-wfile_name = "{} - stackpot.txt".format(datetime.date.today())
-wfile = open(wfile_name, 'w')
-
-for w in winners:
-    wfile.write(w + '\n')
-
-wfile = open(wfile_name, 'r')
-alert = Notifier(wfile)
-alert.emailer()
+# Send notifications
+alert = Notifier(winners, "stackpot")
+alert.email()
 alert.pushover()
