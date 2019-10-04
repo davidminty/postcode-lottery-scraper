@@ -11,33 +11,33 @@ import datetime
 import os
 import smtplib
 from email.message import EmailMessage
-from keys import keys
+from keys import emailkeys, pushoverkeys
+import http.client
+import urllib
 
 ## GLOBALS
 
 chrome_options = Options()
 chrome_options.add_argument("--user-data-dir=selenium")
 driver = webdriver.Chrome(options=chrome_options)
-wfile_name = "winners {}.txt".format(datetime.date.today())
-wfile = open(wfile_name, 'w')
 wait = WebDriverWait(driver, 180)
+winners = []
 
 ## FUNCTIONS
 
-def findPostcodes(title = "Pick My Postcode"):
-    wait.until(EC.title_contains(title))
+def find_postcodes():
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
     postcodes = driver.find_elements_by_class_name('result--postcode')
     for postcode in postcodes:
         p = postcode.text.split("\n")
         winners.append(" : ".join(p))
-    return winners, 
+    return winners
 
-def nextPage():
+def next_page():
     nextbtn = driver.find_element_by_class_name('result--button')
     nextbtn.click()
 
-def pageInteraction(element):
+def page_interaction(element):
     page_element = wait.until(EC.presence_of_element_located((By.XPATH, element)))
     page_element.click()
 
@@ -46,51 +46,23 @@ def emailer(wfile, keys):
     emailBody.set_content(wfile.read())
     emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
 
-    smtpObj = smtplib.SMTP(keys["srv"], keys["port"])
+    smtpObj = smtplib.SMTP(emailkeys["srv"], emailkeys["port"])
     smtpObj.ehlo()
     smtpObj.starttls()
-    smtpObj.login(keys["login"], keys["password"])
+    smtpObj.login(emailkeys["login"], emailkeys["password"])
 
     smtpObj.sendmail(
-        keys["fromaddr"],keys["toaddr"], emailBody.as_string()
+        emailkeys["fromaddr"],emailkeys["toaddr"], emailBody.as_string()
     )
 
     smtpObj.quit()
 
-
-# Create list for winning postcodes
-winners = []
-
-# Open up PickMyPostcode
-driver.get('https://pickmypostcode.com/')
-
-# Main Daily Postcode
-findPostcodes()
-nextPage()
-
-# Video Page
-pageInteraction("//div[@class='brid-overlay-play-button brid-button ']")
-findPostcodes("Video")
-nextPage()
-
-# Survey Page
-pageInteraction("//button[@class='btn btn-secondary btn__xs']")
-findPostcodes("Survey")
-time.sleep(10)
-nextPage()
-
-# Stackpot Page
-findPostcodes("Stackpot")
-
-## Close Down Browser & chromedriver
-driver.close()
-driver.quit()
-
-# Final list
-for w in winners:
-    wfile.write(w + '\n')
-
-wfile = open(wfile_name, 'r')
-
-## Emailer
-emailer(wfile, keys)
+def pushover(wfile, keys):
+    conn = http.client.HTTPSConnection("api.pushover.net:443")
+    conn.request("POST", "/1/messages.json",
+        urllib.parse.urlencode({
+        "token": pushoverkeys["apptoken"],
+        "user": pushoverkeys["userkey"],
+        "message": (wfile.read())}), 
+        { "Content-type": "application/x-www-form-urlencoded" })
+    conn.getresponse()

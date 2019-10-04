@@ -1,7 +1,6 @@
-.*
+.vscode/settings.json
 *.log
 *.txt
 selenium/*
-keys.py
-emailer.py
-__pycache__/* 
+*keys*
+__pycache__/*
