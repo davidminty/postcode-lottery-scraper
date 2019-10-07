@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-from lottery import *
+import lottery
 
 # Instantiate scraper
-maindraw = Scraper()
+maindraw = lottery.Scraper()
 
 # Main Draw
 maindraw.open_page('https://pickmypostcode.com/')
@@ -29,6 +29,6 @@ maindraw.close_driver()
 winners = maindraw.winners
 
 # Send notifications
-alert = Notifier(winners, "main")
+alert = lottery.Notifier(winners, "main")
 alert.email()
 alert.pushover()

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-from lottery import *
+import lottery
 
 # Instantiate the scraper
-stackpot = Scraper()
+stackpot = lottery.Scraper()
 
 # Stackpot Draw
 stackpot.open_page('https://pickmypostcode.com/stackpot')
@@ -15,6 +15,6 @@ stackpot.close_driver()
 winners = stackpot.winners
 
 # Send notifications
-alert = Notifier(winners, "stackpot")
+alert = lottery.Notifier(winners, "stackpot")
 alert.email()
 alert.pushover()
