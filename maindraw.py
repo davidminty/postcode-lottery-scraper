@@ -29,6 +29,6 @@ maindraw.close_driver()
 winners = maindraw.winners
 
 # Send notifications
-alert = Notifier(winners, "main draw")
+alert = Notifier(winners, "main")
 alert.email()
 alert.pushover()
