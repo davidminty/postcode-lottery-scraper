@@ -1,58 +1,34 @@
 #!/usr/bin/python3
-from lottery import *
-from keys import emailkeys, pushoverkeys
-import datetime
+import lottery
 
-## Globals
-wfile_name = "main winners - {}.txt".format(datetime.date.today())
-wfile = open(wfile_name, 'w')
+# Instantiate scraper
+maindraw = lottery.Scraper()
 
-# Main Postcode
-try:
-    driver.get('https://pickmypostcode.com/')
-    find_postcodes()
-except:
-    winners.append("Unable to find Main Postcode")
-    pass
+# Main Draw
+maindraw.open_page('https://pickmypostcode.com/')
+maindraw.find_postcodes()
 
-# Video Postcode
-try:
-    driver.get('https://pickmypostcode.com/video')
-    page_interaction("//div[@class='brid-overlay-play-button brid-button ']")
-    find_postcodes()
-except:
-    winners.append("Unable to find Video Postcode")
-    pass
+# Video Draw
+maindraw.open_page('https://pickmypostcode.com/video')
+maindraw.page_interaction("//div[@class='brid-overlay-play-button brid-button ']")
+maindraw.find_postcodes()
 
-# Survey Postcode
-try:
-    driver.get('https://pickmypostcode.com/survey-draw')
-    page_interaction("//button[@class='btn btn-secondary btn__xs']")
-    find_postcodes()
-except:
-    winners.append("Unable to find Survey Postcode")
-    pass
+# Survey Draw
+maindraw.open_page('https://pickmypostcode.com/survey-draw')
+maindraw.page_interaction("//button[@class='btn btn-secondary btn__xs']")
+maindraw.find_postcodes()
 
-# Bonus Postcode
-try:
-    driver.get("https://pickmypostcode.com/your-bonus/")
-    find_postcodes()
-except:
-    winners.append("Unable to find Bonus Postcode")
-    pass
+# Bonus Draw
+maindraw.open_page("https://pickmypostcode.com/your-bonus")
+maindraw.find_postcodes()
 
-## Close Down Browser & chromedriver
-driver.close()
-driver.quit()
+# Close chrome and the driver
+maindraw.close_driver()
 
-# Final list
-for w in winners:
-    wfile.write(w + '\n')
+# Winners list
+winners = maindraw.winners
 
-
-## Email Notification
-wfile = open(wfile_name, 'r')
-emailer(wfile, emailkeys)
-# Pushover Notification
-wfile = open(wfile_name, 'r')
-pushover(wfile, pushoverkeys)
+# Send notifications
+alert = lottery.Notifier(winners, "main")
+alert.email()
+alert.pushover()

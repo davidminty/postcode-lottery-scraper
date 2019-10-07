@@ -6,63 +6,98 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 import time
 import datetime
 import os
 import smtplib
 from email.message import EmailMessage
-from keys import emailkeys, pushoverkeys
+from keys import *
 import http.client
 import urllib
 
-## GLOBALS
+class Scraper:
+    chrome_options = Options()
 
-chrome_options = Options()
-chrome_options.add_argument("--user-data-dir=selenium")
-driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 180)
-winners = []
+    def __init__(self):
+        self.chrome_options.add_argument("--user-data-dir=selenium")
+        self.driver = webdriver.Chrome(options=self.chrome_options)
+        self.driver.set_page_load_timeout(30)
+        self.wait = WebDriverWait(self.driver, 180)
+        self.winners = []
 
-## FUNCTIONS
+    def open_page(self, url):
+        if url == 'https://pickmypostcode.com/':
+            self.page = "Main"
+        else:
+            self.page = url.split(".com/")[1].strip()
+        try:
+            self.driver.get(url)
+        except TimeoutException:
+            pass
+        
+    def page_interaction(self, element):
+        try:
+            page_element = self.wait.until(EC.presence_of_element_located((By.XPATH, element)))
+            page_element.click()
+        except:
+            pass
 
-def find_postcodes():
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
-    postcodes = driver.find_elements_by_class_name('result--postcode')
-    for postcode in postcodes:
-        p = postcode.text.split("\n")
-        winners.append(" : ".join(p))
-    return winners
+    def find_postcodes(self):
+        try:
+            self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
+            self.postcodes = self.driver.find_elements_by_class_name('result--postcode')
+            for self.postcode in self.postcodes:
+                p = self.postcode.text.split("\n")
+                self.winners.append(" : ".join(p))
+        except:
+            self.winners.append("Unable to find Postcodes for {} draw".format(self.page))
 
-def next_page():
-    nextbtn = driver.find_element_by_class_name('result--button')
-    nextbtn.click()
+    def next_page(self):
+        nextbtn = self.driver.find_element_by_class_name('result--button')
+        nextbtn.click()
 
-def page_interaction(element):
-    page_element = wait.until(EC.presence_of_element_located((By.XPATH, element)))
-    page_element.click()
+    def close_driver(self):
+        self.driver.quit()
 
-def emailer(wfile, keys):
-    emailBody = EmailMessage()
-    emailBody.set_content(wfile.read())
-    emailBody['Subject'] = "Winning Postcodes for {}".format(datetime.date.today())
 
-    smtpObj = smtplib.SMTP(emailkeys["srv"], emailkeys["port"])
-    smtpObj.ehlo()
-    smtpObj.starttls()
-    smtpObj.login(emailkeys["login"], emailkeys["password"])
+class Notifier():
+    def __init__(self, winners, draw):
+        self.emailkeys = emailkeys
+        self.pushkeys = pushkeys
+        self.winners = winners
+        self.draw = draw
+        self.wfile_name = "{}.txt".format(self.draw)
+        self.write_text_file()
 
-    smtpObj.sendmail(
-        emailkeys["fromaddr"],emailkeys["toaddr"], emailBody.as_string()
-    )
+    def write_text_file(self):
+        wfile = open(self.wfile_name, 'w+')
+        for w in self.winners:
+            wfile.write(w + '\n')
+        wfile.close()
 
-    smtpObj.quit()
+    def email(self):
+        emailBody = EmailMessage()
+        with open(self.wfile_name, 'r') as wf:
+            emailBody.set_content(wf.read())
+            wf.close()
+        emailBody['Subject'] = "Winning {} Postcodes for {}".format(self.draw.capitalize(), datetime.date.today())
 
-def pushover(wfile, keys):
-    conn = http.client.HTTPSConnection("api.pushover.net:443")
-    conn.request("POST", "/1/messages.json",
-        urllib.parse.urlencode({
-        "token": pushoverkeys["apptoken"],
-        "user": pushoverkeys["userkey"],
-        "message": (wfile.read())}), 
-        { "Content-type": "application/x-www-form-urlencoded" })
-    conn.getresponse()
+        smtpObj = smtplib.SMTP(self.emailkeys["srv"], self.emailkeys["port"])
+        smtpObj.ehlo()
+        smtpObj.starttls()
+        smtpObj.login(self.emailkeys["login"], self.emailkeys["password"])
+        smtpObj.sendmail(self.emailkeys["fromaddr"],self.emailkeys["toaddr"], emailBody.as_string())
+        smtpObj.quit()
+
+    def pushover(self):
+        conn = http.client.HTTPSConnection("api.pushover.net:443")
+        with open(self.wfile_name, 'r') as wf:
+            conn.request("POST", "/1/messages.json",
+                urllib.parse.urlencode({
+                "token": self.pushkeys["apptoken"],
+                "user": self.pushkeys["userkey"],
+                "message": (wf.read())}), 
+                { "Content-type": "application/x-www-form-urlencoded" })
+            wf.close()
+        conn.getresponse()

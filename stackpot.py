@@ -1,33 +1,20 @@
 #!/usr/bin/python3
-from lottery import *
-from keys import emailkeys, pushoverkeys
-import datetime
+import lottery
 
-## Globals
-wfile_name = "stackpot winners - {}.txt".format(datetime.date.today())
-wfile = open(wfile_name, 'w')
+# Instantiate the scraper
+stackpot = lottery.Scraper()
 
-# Stackpot Postcodes
-try:
-    driver.get('https://pickmypostcode.com/stackpot')
-    find_postcodes()
-except:
-    winners.append("Unable to find Stackpot Postcodes")
-    pass
+# Stackpot Draw
+stackpot.open_page('https://pickmypostcode.com/stackpot')
+stackpot.find_postcodes()
 
-## Close Down Browser & chromedriver
-driver.close()
-driver.quit()
+# Close chrome and the driver
+stackpot.close_driver()
 
-# Final list
-for w in winners:
-    wfile.write(w + '\n')
+# Winners List
+winners = stackpot.winners
 
-wfile = open(wfile_name, 'r')
-
-## Email Notification
-wfile = open(wfile_name, 'r')
-emailer(wfile, emailkeys)
-# Pushover Notification
-wfile = open(wfile_name, 'r')
-pushover(wfile, pushoverkeys)
+# Send notifications
+alert = lottery.Notifier(winners, "stackpot")
+alert.email()
+alert.pushover()
