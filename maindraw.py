@@ -4,31 +4,29 @@ import lottery
 # Instantiate scraper
 maindraw = lottery.Scraper()
 
-# Main Draw
-maindraw.open_page('https://pickmypostcode.com/')
-maindraw.find_postcodes()
+pages = [
+    # Main Draw
+    {"page": "https://pickmypostcode.com/"},
+    # Video Draw
+    {"page": 'https://pickmypostcode.com/video',
+        "interaction": "//div[@class='brid-overlay-play-button brid-button ']"},
+    # Survey Draw
+    {"page": "https://pickmypostcode.com/survey-draw",
+        "interaction": "//button[@class='btn btn-secondary btn__xs']"},
+    # Bonus Draw
+    {"page": "https://pickmypostcode.com/your-bonus"}
+]
 
-# Video Draw
-maindraw.open_page('https://pickmypostcode.com/video')
-maindraw.page_interaction("//div[@class='brid-overlay-play-button brid-button ']")
-maindraw.find_postcodes()
-
-# Survey Draw
-maindraw.open_page('https://pickmypostcode.com/survey-draw')
-maindraw.page_interaction("//button[@class='btn btn-secondary btn__xs']")
-maindraw.find_postcodes()
-
-# Bonus Draw
-maindraw.open_page("https://pickmypostcode.com/your-bonus")
-maindraw.find_postcodes()
+for p in pages:
+    maindraw.open_page(p["page"])
+    if p["interaction"]:
+        maindraw.page_interaction(p["interaction"])
+    maindraw.find_postcodes()
 
 # Close chrome and the driver
 maindraw.close_driver()
 
-# Winners list
-winners = maindraw.winners
-
 # Send notifications
-alert = lottery.Notifier(winners, "main")
+alert = lottery.Notifier(maindraw.winners, "main")
 alert.email()
 alert.pushover()

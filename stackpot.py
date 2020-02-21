@@ -11,10 +11,7 @@ stackpot.find_postcodes()
 # Close chrome and the driver
 stackpot.close_driver()
 
-# Winners List
-winners = stackpot.winners
-
 # Send notifications
-alert = lottery.Notifier(winners, "stackpot")
+alert = lottery.Notifier(stackpot.winners, "stackpot")
 alert.email()
 alert.pushover()
