@@ -6,7 +6,8 @@ maindraw = lottery.Scraper()
 
 pages = [
     # Main Draw
-    {"page": "https://pickmypostcode.com/"},
+    {"page": "https://pickmypostcode.com/", "interaction": False},
+
     # Video Draw
     {"page": 'https://pickmypostcode.com/video',
         "interaction": "//div[@class='brid-overlay-play-button brid-button ']"},
@@ -14,7 +15,7 @@ pages = [
     {"page": "https://pickmypostcode.com/survey-draw",
         "interaction": "//button[@class='btn btn-secondary btn__xs']"},
     # Bonus Draw
-    {"page": "https://pickmypostcode.com/your-bonus"}
+    {"page": "https://pickmypostcode.com/your-bonus", "interaction": False}
 ]
 
 for p in pages:
