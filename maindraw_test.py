@@ -30,5 +30,4 @@ winners = maindraw.winners
 
 # Send notifications
 alert = lottery.Notifier(winners, "main")
-alert.email()
 alert.pushover()

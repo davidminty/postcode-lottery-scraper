@@ -26,13 +26,37 @@ class Scraper:
         self.wait = WebDriverWait(self.driver, 180)
         self.winners = []
 
+    def login(self, draw):
+        if draw == "main":
+            pass
+
+        else:
+            try:
+                
+                signin = self.driver.find_element_by_link_text('Sign in')
+                signin.click()
+                
+                self.wait.until(EC.presence_of_element_located((By.ID, 'sign-in')))
+
+                postcode = self.driver.find_element_by_id('confirm-ticket')
+                email = self.driver.find_element_by_id('confirm-email')
+                postcode.send_keys("NG24 4AD")
+                email.send_keys("mintyxiv@gmail.com")
+
+                signin_button = self.driver.find_element_by_class_name('btn btn__info btn-loader')
+                signin_button.click()
+           
+            except:
+                pass
+
     def open_page(self, url):
         if url == 'https://pickmypostcode.com/':
-            self.page = "Main"
+            self.page = "main"
         else:
             self.page = url.split(".com/")[1].strip()
         try:
             self.driver.get(url)
+            time.sleep
         except TimeoutException:
             pass
         
@@ -46,6 +70,7 @@ class Scraper:
     def find_postcodes(self):
         try:
             self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'result--postcode')))
+            time.sleep(10)
             self.postcodes = self.driver.find_elements_by_class_name('result--postcode')
             for self.postcode in self.postcodes:
                 p = self.postcode.text.split("\n")
